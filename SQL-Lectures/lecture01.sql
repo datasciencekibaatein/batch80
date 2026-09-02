@@ -52,3 +52,7 @@ from employee;
 select
 	*
 from STORE.customers;
+
+
+
+
