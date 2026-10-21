@@ -1,0 +1,180 @@
+use analysis;
+
+-- Triggers
+
+use analysis;
+
+/*
+A trigger is a database object that automatically executes a block of SQL Statements when a specified event occurs on a table.
+*/
+
+-- employee, log(emp_id,operation,date)
+
+-- events
+
+-- insert
+-- update
+-- delete
+
+
+-- timing
+-- after, before
+
+
+-- 6 triggers
+
+-- before insert
+-- after insert
+-- before update
+-- after update
+-- before delete 
+-- after delete
+
+
+
+
+create table employee(
+	id int primary key,
+    name varchar(30),
+    salary int
+);
+
+insert into employee values
+(1,"Aman",23000),
+(2,"Neha",40000);
+
+
+
+select * from employee;
+
+-- before insert
+-- Whenever we insert the employee , increase their salary by ₹1000.
+
+DELIMITER $$
+CREATE TRIGGER BEFORE_EMPLOYEE_INSERT
+BEFORE INSERT ON EMPLOYEE
+FOR EACH ROW
+BEGIN
+	SET NEW.SALARY = NEW.SALARY + 1000;
+END $$
+DELIMITER ;
+
+INSERT INTO EMPLOYEE VALUES(3,"ROHIT",15000);
+
+
+-- CREATE TABLE
+
+CREATE TABLE EMPLOYEE_LOG(
+EMP_ID INT,
+MESSAGE VARCHAR(40)
+);
+
+ALTER TABLE EMPLOYEE_LOG ADD EVENT_TIME DATE;
+
+-- AFTER INSERT 
+SELECT * FROM EMPLOYEE_LOG;
+
+-- AFTER INSERTING NEW EMPLOYEE IN EMPLOYEE TABLE, THIS TRIGGER WILL INSERT THE RECORD IN EMPLOYEE_LOG,
+-- YOU WOULD THE ID OF NEW EMPLOYEE AND THE MESSAGE AND THE CURRDATE WHILE THE RECORD WAS INSERTED IN EMPLOYEE TABLE
+DELIMITER //
+CREATE TRIGGER AFTER_EMPLOYEE_INSERT
+AFTER INSERT ON EMPLOYEE
+FOR EACH ROW
+BEGIN
+	INSERT INTO EMPLOYEE_LOG VALUES(NEW.ID,CONCAT(NEW.NAME," was added."),curdate());
+end //
+DELIMITER ;
+
+
+
+INSERT INTO EMPLOYEE VALUES(4,"KRISH",20000);
+
+
+
+
+
+
+-- Before Update
+
+-- Whenever an employee's salary is updated increase the new salary by 10%.
+
+DELIMITER $$
+CREATE TRIGGER BEFORE_EMPLOYEE_UPDATE
+BEFORE UPDATE ON EMPLOYEE
+FOR EACH ROW
+BEGIN
+	SET NEW.SALARY = NEW.SALARY * 1.10;
+END $$
+DELIMITER ;
+
+
+SELECT * FROM EMPLOYEE;
+
+UPDATE EMPLOYEE
+SET SALARY = 30000
+WHERE ID = 1;
+
+
+-- AFTER UPDATE
+
+-- WHENEVER AN EMPLOYEE'S SALARY CHANGES, RECORD THE OLD AND NEW SALARY.
+
+CREATE TABLE SALARY_AUDIT(
+	ID INT,
+    OLD_SALARY INT,
+    NEW_SALARY int
+);
+
+
+
+DELIMITER //
+CREATE TRIGGER AFTER_EMOPLOYEE_UPDATE
+AFTER UPDATE ON EMPLOYEE
+FOR EACH ROW
+BEGIN
+	INSERT INTO SALARY_AUDIT
+    VALUES(
+		NEW.ID,
+        OLD.SALARY,
+        NEW.SALARY
+        );
+        
+	INSERT INTO EMPLOYEE_LOG
+    VALUES(
+		NEW.ID,
+        CONCAT(NEW.NAME," SALARY UPDATED"),
+        CURDATE()
+        );
+END //
+DELIMITER ;
+
+
+SELECT * FROM EMPLOYEE;
+SELECT * FROM SALARY_AUDIT;
+SELECT * FROM EMPLOYEE_LOG;
+
+UPDATE EMPLOYEE
+SET SALARY = 20000
+WHERE ID = 3;
+
+
+-- BEFORE DELETE
+
+-- DELETE THE EMPLOYEE , MAINTAIN THE LOG
+
+DELIMITER //
+CREATE TRIGGER BEFORE_EMPLOYEE_DELETE
+BEFORE DELETE ON EMPLOYEE
+FOR EACH ROW
+BEGIN 
+	INSERT INTO EMPLOYEE_LOG
+    VALUES(
+		OLD.ID,
+        CONCAT("EMPLOYEE", OLD.NAME," IS DELETED."),
+        CURDATE()
+        );
+END//
+DELIMITER ;
+
+
+DELETE FROM EMPLOYEE WHERE ID = 1;
